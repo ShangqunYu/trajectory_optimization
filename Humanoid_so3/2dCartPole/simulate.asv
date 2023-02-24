@@ -1,0 +1,102 @@
+clear all
+close all
+clc % "clean slate" for your matlab path
+restoredefaultpath    
+
+
+%% Definte fixed paramters
+
+Mcart = 10; Mpendulum = 1; lbar = 0.7; gravity = 9.81; 
+p = [Mcart Mpendulum lbar gravity]';  % parameters
+sim_dt = 0.001;
+
+INIT_X = 0; INIT_TH = pi; 
+
+z0 = [INIT_X;INIT_TH;0;0];
+dim = length(z0);
+
+tf = 5; num_sim_step = floor(tf/sim_dt);
+
+z_out = zeros(dim,num_sim_step);
+z_out(:,1) = z0;
+
+E_trj = [];
+x_trj = [];
+th_trj = [];
+h_trj = [];
+
+d = 1;
+b = 1;
+A = [0 1 0 0;
+    0 -d/Mcart -b*Mpendulum*gravity/Mcart 0;
+    0 0 0 1;
+    0 -b*d/(Mcart*lbar) b*(Mpendulum+Mcart)*gravity/(Mcart*lbar) 0];
+B = [0; 1/Mcart; 0; b*1/(Mcart*lbar)];
+eig(A)
+det(ctrb(A,B))
+
+%%  Design LQR controller
+Q = [5 0 0 0;
+    0 1 0 0;
+    0 0 1 0;
+    0 0 0 1];
+R = .0001;
+
+K = lqr(A,B,Q,R);
+wr = [5; 0; pi; 0];      % reference position
+
+for i=1:num_sim_step-1
+    x = [z_out(1,i); z_out(3,i); z_out(2,i); z_out(4,i)];
+    tau = -K*(x - wr);
+    %tau = 0;
+    %dz = dynamics(z_out(:,i), p, tau);
+    %z_out(:,i+1) = z_out(:,i) + dz*sim_dt;
+    %tau(1) =-Mcart*gravity*z_out(2,i) - 5*z_out(4,i);
+    z_out(:,i+1) = rungeKutta(z_out(:,i), p, tau, sim_dt);
+    E_trj(i) = energy(z_out(:,i), p);
+    x_trj(i) = z_out(1,i);
+    th_trj(i) = z_out(2,i);
+    positions = keypoints_position(z_out(:,i), p);
+    h = positions(2,1);
+    h_trj(i) = h;
+end
+f1 = figure;
+figure(f1); 
+plot(x_trj);
+hold on
+plot(th_trj);
+plot(h_trj);
+
+f2 = figure;
+figure(f2); 
+plot(E_trj);
+ylim([0 100]);
+animate(z_out , sim_dt,p);
+
+opti = casadi.Opti(); % Optimization problem
+cs = []
+
+function z_next = rungeKutta(z,p,u,sim_dt)
+    k1 = dynamics(z,p,u);
+    k2 = dynamics(z + k1*0.5*sim_dt,p,u);
+    k3 = dynamics(z + k2*0.5*sim_dt,p,u);
+    k4 = dynamics(z + k3*sim_dt,p,u);
+    z_next = z + sim_dt/6 * (k1 + 2*k2 + 2*k3 + k4);
+end
+
+function z_next = newton_euler(z,p,u,sim_dt)
+    k1 = dynamics(z,p,u);
+    z_next = z + sim_dt * k1;
+end
+
+function dx = pendcart(x,m,M,L,g,d,u)
+
+    Sx = sin(x(3));
+    Cx = cos(x(3));
+    D = m*L*L*(M+m*(1-Cx^2));
+    
+    dx(1,1) = x(2);
+    dx(2,1) = (1/D)*(-m^2*L^2*g*Cx*Sx + m*L^2*(m*L*x(4)^2*Sx - d*x(2))) + m*L*L*(1/D)*u;
+    dx(3,1) = x(4);
+    dx(4,1) = (1/D)*((m+M)*m*g*L*Sx - m*L*Cx*(m*L*x(4)^2*Sx - d*x(2))) - m*L*Cx*(1/D)*u;
+end

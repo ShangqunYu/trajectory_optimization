@@ -1,0 +1,11 @@
+function  mat = xyzToRotMat(xyz)
+theta = norm(xyz);
+omega_hat = xyz / theta;
+
+if theta == 0
+    mat = eye(3);
+else
+
+end
+
+

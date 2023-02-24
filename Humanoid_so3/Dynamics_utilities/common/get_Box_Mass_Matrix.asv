@@ -1,0 +1,7 @@
+function matrix = get_Box_Mass_Matrix(m,w,h,d)
+    I = get_Box_Inertia(m,w,h,d);
+    
+    matrix = [I ]
+
+     
+end

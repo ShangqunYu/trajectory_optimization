@@ -1,0 +1,24 @@
+function vis_orientation(R_op, kesi, R_des)
+%     f3 = figure;
+%     hold off
+%     figure(f3);
+%     axis equal
+    %axis([-1 1 -1 1 -1 1]);
+    frames = length(kesi);
+    thetas = []
+    for i = 1:frames
+        
+        rot = expm(skew(kesi(:,i)));
+        R = R_op * rot;
+        R_err = R_des(:,:,i)*R';
+        theta = acos((trace(R_err)-1)/2);
+        thetas = [thetas, thet]
+
+
+    end
+
+    
+
+
+
+end
