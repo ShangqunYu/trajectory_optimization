@@ -31,7 +31,7 @@ function animate_SRBD(xfb, rot, cfootheel, cfoottoe, cs, r, P_des, R_des)
                 plot3(cfoottoe(4,i),cfoottoe(5,i),cfoottoe(6,i), "^",'Color','b');  % left toe "^"
             end
         end
-        axis([-1 5 -2 2 0 2]);
+        axis([-1 4 -3 3 0 2]);
         pause(0.5);
         disp(i);
     end

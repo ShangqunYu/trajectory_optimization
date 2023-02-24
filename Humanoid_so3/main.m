@@ -10,7 +10,7 @@ addpath(genpath('./casadi-linux-matlabR2014a-v3.5.5'))
 import casadi.*
 
 % target displacement currently we just set to 0 for simplification
-distx = 2; disty = 0; facing_direction = 0;
+distx = 2; disty = 2; facing_direction = pi/4;
 
 p = get_params();
 % number of steps
